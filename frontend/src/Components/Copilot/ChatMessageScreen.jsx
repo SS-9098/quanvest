@@ -7,15 +7,15 @@ export const ChatMessageScreen = ({ chatId }) => {
 
     const renderLLMResponse = (llmResponse, ratiosData, financialData, shareholdingData, overviewData) => {
     const responseArray = Array.isArray(llmResponse) ? llmResponse : [];
-    if (overviewData) {
+        return responseArray.map((segment, index) => {
+            {/*if (overviewData) {
         return (
             <ReactMarkdown>
                 <h2>Company Overview</h2>
                 {overviewData.overview_text}
             </ReactMarkdown>
-        )
-    }
-        return responseArray.map((segment, index) => {
+            )
+        }*/}
         if (typeof segment === 'string') {
             return <ReactMarkdown key={index}>{segment}</ReactMarkdown>;
         } else if (segment.placeholder === '~COMPREHENSIVE_RATIOS_TABLE~' || segment.placeholder === '~RATIOS_TABLE~' && segment.type === 'table') {
