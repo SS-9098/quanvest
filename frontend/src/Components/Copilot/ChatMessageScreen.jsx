@@ -8,15 +8,16 @@ export const ChatMessageScreen = ({ chatId }) => {
     const renderLLMResponse = (llmResponse, ratiosData, financialData, shareholdingData, overviewData) => {
     const responseArray = Array.isArray(llmResponse) ? llmResponse : [];
         return responseArray.map((segment, index) => {
-            {/*if (overviewData) {
+             if (overviewData) {
         return (
             <ReactMarkdown>
                 <h2>Company Overview</h2>
-                {overviewData.overview_text}
+                {overviewData}
             </ReactMarkdown>
-            )
-        }*/}
+        );
+    }
         if (typeof segment === 'string') {
+
             return <ReactMarkdown key={index}>{segment}</ReactMarkdown>;
         } else if (segment.placeholder === '~COMPREHENSIVE_RATIOS_TABLE~' || segment.placeholder === '~RATIOS_TABLE~' && segment.type === 'table') {
             return (
@@ -104,7 +105,7 @@ export const ChatMessageScreen = ({ chatId }) => {
                     const ratiosData = response?.ratios_data?.filtered?.[0] || {};
                     const financialsData = response?.financial_data.balance?.[0] || {};
                     const shareholdingData = response?.shareholding_data?.[0] || {};
-                    const overviewData = response?.company_overviews?.overview?.[0] || {};
+                    const overviewData = response?.company_overviews[0]?.overview?.overview_text || "no overview text available";
                     console.log(llmResponse);
 
                     return (
