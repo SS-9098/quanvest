@@ -9,16 +9,27 @@ export const ChatMessageScreen = ({ chatId }) => {
     const responseArray = Array.isArray(llmResponse) ? llmResponse : [];
         return responseArray.map((segment, index) => {
              if (overviewData) {
-        return (
-            <ReactMarkdown>
-                <h2>Company Overview</h2>
-                {overviewData}
-            </ReactMarkdown>
-        );
-    }
+                return (
+                    <div key={`overview-${index}`} className="company-overview">
+                        <h2>Company Overview</h2>
+                        <ReactMarkdown>{overviewData}</ReactMarkdown>
+                    </div>
+                );
+            }
         if (typeof segment === 'string') {
-
-            return <ReactMarkdown key={index}>{segment}</ReactMarkdown>;
+             if (overviewData && index=== 0) {
+                return (
+                    <>
+                    <div key={`overview-${index}`} className="company-overview">
+                        <h2>Company Overview</h2>
+                        <ReactMarkdown>{overviewData}</ReactMarkdown>
+                    </div>
+                    <ReactMarkdown key={index}>{segment}</ReactMarkdown>;
+                </>
+                );
+            } else {
+                return <ReactMarkdown key={index}>{segment}</ReactMarkdown>;
+            }
         } else if (segment.placeholder === '~COMPREHENSIVE_RATIOS_TABLE~' || segment.placeholder === '~RATIOS_TABLE~' && segment.type === 'table') {
             return (
                 <div key={index} className="company-stats-table">
