@@ -6,19 +6,19 @@ import {Overview} from "../../Pages/Main-Pages/Company/Overview";
 export const ChatMessageScreen = ({ chatId }) => {
     const { history } = useSelector(state => state?.chatReducer?.chatHistoryMap[chatId] || []);
 
-    const renderLLMResponse = (llmResponse, ratiosData, financialData, shareholdingData, overviewData, compID) => {
-    const responseArray = Array.isArray(llmResponse) ? llmResponse : [];
-        return responseArray.map((segment, index) => {
+    const renderLLMResponse = (llmResponse, ratiosData, financialData, shareholdingData, overviewData) => {
+    const responseArray = Array.isArray(llmResponse) ? llmResponse : ["Server is currently unavailable"];
+    return responseArray.map((segment, index) => {
         if (typeof segment === 'string') {
-             if (overviewData && index=== 0) {
+            if (overviewData && index === 0) {
                 return (
                     <>
-                    <div key={`overview-${index}`} className="company-overview">
-                        <h2>Company Overview</h2>
-                        <ReactMarkdown>{overviewData}</ReactMarkdown>
-                    </div>
-                    <ReactMarkdown key={index}>{segment}</ReactMarkdown>;
-                </>
+                        <div key={`overview-${index}`} className="company-overview">
+                            <h2>Company Overview</h2>
+                            <ReactMarkdown>{overviewData}</ReactMarkdown>
+                        </div>
+                        <ReactMarkdown key={index}>{segment}</ReactMarkdown>
+                    </>
                 );
             } else {
                 return <ReactMarkdown key={index}>{segment}</ReactMarkdown>;
@@ -30,15 +30,15 @@ export const ChatMessageScreen = ({ chatId }) => {
                     <table>
                         <thead>
                             <tr>
-                                {ratiosData.headers.map((header, i) => (
+                                {ratiosData?.headers?.map((header, i) => (
                                     <th key={i}>{header}</th>
                                 ))}
                             </tr>
                         </thead>
                         <tbody>
-                            {ratiosData.data.map((row, i) => (
+                            {ratiosData?.data?.map((row, i) => (
                                 <tr key={i}>
-                                    {ratiosData.headers.map((header, j) => (
+                                    {ratiosData?.headers?.map((header, j) => (
                                         <td key={j}>{row[header] || ''}</td>
                                     ))}
                                 </tr>
@@ -54,15 +54,15 @@ export const ChatMessageScreen = ({ chatId }) => {
                     <table>
                         <thead>
                             <tr>
-                                {financialData.headers.map((header, i) => (
+                                {financialData?.headers?.map((header, i) => (
                                     <th key={i}>{header}</th>
                                 ))}
                             </tr>
                         </thead>
                         <tbody>
-                            {financialData.data.map((row, i) => (
+                            {financialData?.data?.map((row, i) => (
                                 <tr key={i}>
-                                    {ratiosData.headers.map((header, j) => (
+                                    {financialData?.headers?.map((header, j) => (
                                         <td key={j}>{row[header] || ''}</td>
                                     ))}
                                 </tr>
@@ -78,15 +78,15 @@ export const ChatMessageScreen = ({ chatId }) => {
                     <table>
                         <thead>
                             <tr>
-                                {shareholdingData.headers.map((header, i) => (
+                                {shareholdingData?.headers?.map((header, i) => (
                                     <th key={i}>{header}</th>
                                 ))}
                             </tr>
                         </thead>
                         <tbody>
-                            {shareholdingData.data.map((row, i) => (
+                            {shareholdingData?.data?.map((row, i) => (
                                 <tr key={i}>
-                                    {shareholdingData.headers.map((header, j) => (
+                                    {shareholdingData?.headers?.map((header, j) => (
                                         <td key={j}>{row[header] || ''}</td>
                                     ))}
                                 </tr>
@@ -111,7 +111,7 @@ export const ChatMessageScreen = ({ chatId }) => {
                     const graph = (response?.chart_data?.plotly_json && JSON.parse(response?.chart_data?.plotly_json)) || {};
                     const llmResponse = response?.llm_response || [];
                     const ratiosData = response?.ratios_data?.filtered?.[0] || {};
-                    const financialsData = response?.financial_data.balance?.[0] || {};
+                    const financialsData = response?.financial_data?.balance?.[0] || {};
                     const shareholdingData = response?.shareholding_data?.[0] || {};
                     const overviewData = response?.company_overviews[0]?.overview?.overview_text || "no overview text available";
                     const compID = response?.company_id || "";
