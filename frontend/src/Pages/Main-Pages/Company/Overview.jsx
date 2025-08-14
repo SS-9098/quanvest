@@ -1,147 +1,84 @@
+import '../../../Styles/Pages/Main-Pages/Company/Overview.css';
 import ReactMarkdown from 'react-markdown';
-import { PlotlyGraph } from "../PlotlyGraph";
-import {useSelector} from "react-redux";
-import {Overview} from "../../Pages/Main-Pages/Company/Overview";
-import {splitOverview} from "../../Utils/utilities";
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { getOverviewDataFunc, getOverviewGraphDataFunc } from '../../../Redux/MainReducer/action';
+import { useParams } from 'react-router-dom';
+import { splitOverview } from '../../../Utils/utilities';
+import { PlotlyGraph } from '../../../Components/PlotlyGraph';
 
-export const ChatMessageScreen = ({ chatId }) => {
-    const { history } = useSelector(state => state?.chatReducer?.chatHistoryMap[chatId] || []);
-
-    const renderLLMResponse = (llmResponse, ratiosData, financialData, shareholdingData, overviewData, compID) => {
-    const responseArray = Array.isArray(llmResponse) ? llmResponse : ["Server is currently unavailable"];
-    return responseArray.map((segment, index) => {
-        if (typeof segment === 'string') {
-            if (overviewData && index === 0) {
-                return (
-                    <>
-                        <div key={`overview-${index}`} className="company-overview">
-                            <h2>Company Overview</h2>
-                            <ReactMarkdown>{splitOverview(overviewData).overview}</ReactMarkdown>
-                        </div>
-                        <ReactMarkdown key={index}>{segment}</ReactMarkdown>
-                    </>
-                );
-            } else {
-                return <ReactMarkdown key={index}>{segment}</ReactMarkdown>;
-            }
-        } else if (segment.placeholder === '~COMPREHENSIVE_RATIOS_TABLE~' || segment.placeholder === '~RATIOS_TABLE~' && segment.type === 'table') {
-            return (
-                <div key={index} className="company-stats-table">
-                    <h3>Comprehensive Ratios Table</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                {ratiosData?.headers?.map((header, i) => (
-                                    <th key={i}>{header}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {ratiosData?.data?.map((row, i) => (
-                                <tr key={i}>
-                                    {ratiosData?.headers?.map((header, j) => (
-                                        <td key={j}>{row[header] || ''}</td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            );
-        } else if (segment.placeholder === '~FINANCIAL_DATA_TABLE~' || segment.placeholder === '~FINANCIAL_PARAMETERS_TABLE~' && segment.type === 'table') {
-            return (
-                <div key={index} className="company-stats-table">
-                    <h3>Financial Table</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                {financialData?.headers?.map((header, i) => (
-                                    <th key={i}>{header}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {financialData?.data?.map((row, i) => (
-                                <tr key={i}>
-                                    {financialData?.headers?.map((header, j) => (
-                                        <td key={j}>{row[header] || ''}</td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            );
-        } else if (segment.placeholder === '~SHAREHOLDING_TABLE~' && segment.type === 'table') {
-            return (
-                <div key={index} className="shareholding-data-table">
-                    <h3>Shareholding Table</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                {shareholdingData?.headers?.map((header, i) => (
-                                    <th key={i}>{header}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {shareholdingData?.data?.map((row, i) => (
-                                <tr key={i}>
-                                    {shareholdingData?.headers?.map((header, j) => (
-                                        <td key={j}>{row[header] || ''}</td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            );
-        } else if (segment.placeholder === '~OVERVIEW_STATS_TABLE~' && segment.type === 'table') {
-            return (
-                <Overview ID={compID} />
-            );
+export const Overview = () => {
+    const { compId } = useParams();
+    const [fullOverview, setFullOverview] = useState(false);
+    const { overview: { data: { overview, stats }, graph } } = useSelector(store => store.mainReducer);
+    const dispatch = useDispatch();
+    const [graphPeriod, setGraphPeriod] = useState('10yr');
+    const [graphType, setGraphType] = useState('price');
+    const processStatsData = (key, statCategory) => {
+        if (!stats[key]) {
+            return;
         }
-        return null;
-    });
-};
-
+        const { columns, values } = stats[key];
+        if (!values || !columns) {
+            return;
+        }
+        return (
+            <>
+                <h3 className='stat-category'>{statCategory}</h3>
+                {
+                    values.map(value => {
+                        return (
+                            <div className='stat-item' key={value}>
+                                <span className='item-name'>{value[0]}</span>
+                                <span className='item-value'>{value[1]} {value[2]}</span>
+                            </div>
+                        )
+                    })
+                }
+            </>
+        )
+    }
+    useEffect(() => {
+        dispatch(getOverviewDataFunc(compId))
+    }, [compId, dispatch])
+    useEffect(() => {
+        overview && stats && dispatch(getOverviewGraphDataFunc(compId, graphType, graphPeriod));
+    }, [graphPeriod, graphType, compId, overview, stats, dispatch]);
     return (
-        <>
-            {history && history.length > 0 &&
-                history.map(({ query, response, timestamp }, i) => {
-                    const graph = (response?.chart_data?.plotly_json && JSON.parse(response?.chart_data?.plotly_json)) || {};
-                    const llmResponse = response?.llm_response || [];
-                    const ratiosData = response?.ratios_data?.filtered?.[0] || {};
-                    const financialsData = response?.financial_data?.balance?.[0] || {};
-                    const shareholdingData = response?.shareholding_data?.[0] || {};
-                    const overviewData = response?.company_overviews?.[0]?.overview?.overview_text || "no overview text available";
-                    const compID = response?.company_id || "";
-                    console.log(llmResponse);
-
-                    if(llmResponse === "Loading response...") {
-                        return;
-                    }
-
-                    return (
-                        <div className="query-response-container" key={i}>
-                            <div className="chat-timestamp">
-                                {new Date(timestamp).toLocaleString()}
-                            </div>
-                            <div className="chat-query">
-                                {query}
-                            </div>
-                            <div className="chat-response">
-                                {renderLLMResponse(llmResponse, ratiosData, financialsData, shareholdingData, overviewData, compID)}
-                                {Object.keys(graph).length > 0 && (
-                                    <div className="chart-plot">
-                                        <PlotlyGraph graphData={graph} />
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    );
-                })
-            }
-        </>
-    );
-};
+        <div className='overview-container'>
+            <div className='overview'>
+                <h2 className='overview-heading'>Company Overview</h2>
+                <ReactMarkdown>{splitOverview(overview?.overview_text, fullOverview)?.overview}</ReactMarkdown>
+                <button className='overview-show-more' onClick={() => setFullOverview(!fullOverview)}>{fullOverview ? 'Show Less' : 'Show More'}</button>
+            </div>
+            <div className='chart'>
+                <div className='chart-controls'>
+                    <div className='chart-periods'>
+                        <button className={`chart-period-button button-secondary ${graphPeriod === '1month' && 'active'}`} onClick={() => setGraphPeriod('1month')}>1 Mon</button>
+                        <button className={`chart-period-button button-secondary ${graphPeriod === '6month' && 'active'}`} onClick={() => setGraphPeriod('6month')}>6 Mon</button>
+                        <button className={`chart-period-button button-secondary ${graphPeriod === '1yr' && 'active'}`} onClick={() => setGraphPeriod('1yr')}>1 Yr</button>
+                        <button className={`chart-period-button button-secondary ${graphPeriod === '3yr' && 'active'}`} onClick={() => setGraphPeriod('3yr')}>3 Yr</button>
+                        <button className={`chart-period-button button-secondary ${graphPeriod === '5yr' && 'active'}`} onClick={() => setGraphPeriod('5yr')}>5 Yr</button>
+                        <button className={`chart-period-button button-secondary ${graphPeriod === '10yr' && 'active'}`} onClick={() => setGraphPeriod('10yr')}>10 Yr</button>
+                    </div>
+                    <select className='chart-type-select' onChange={(e) => setGraphType(e.target.value)} value={graphType}>
+                        <option value={'price'}>Price</option>
+                        <option value={'dma50'} title='50-Day Moving Average'>DMA50</option>
+                        <option value={'dma200'} title='100-Day Moving Average'>DMA200</option>
+                    </select>
+                    <PlotlyGraph graphData={graph} />
+                </div>
+            </div>
+            <div className='statistics'>
+                <h2 className='stats-heading'>Company Statistics</h2>
+                <div className="profile">{stats && processStatsData("profile_metrics", 'Profile')}</div>
+                <div className="margins">{stats && processStatsData("margins_metrics", 'Margins')}</div>
+                <div className="returns-5yr">{stats && processStatsData("returns_5yr_avg_metrics", 'Returns (5Yr Avg)')}</div>
+                <div className="valuation-ttm">{stats && processStatsData("valuation_ttm_metrics", 'Valuation (TTM)')}</div>
+                <div className="valuation-ntm">{stats && processStatsData("valuation_ntm_metrics", 'Valuation (NTM)')}</div>
+                <div className="financial-health">{stats && processStatsData("financial_health_metrics", 'Financial Health')}</div>
+                <div className="growth">{stats && processStatsData("growth_cagr_metrics", 'Growth (CAGR)')}</div>
+            </div>
+        </div>
+    )
+}
