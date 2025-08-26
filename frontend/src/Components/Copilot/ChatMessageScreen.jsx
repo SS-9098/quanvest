@@ -72,7 +72,7 @@ export const ChatMessageScreen = ({ chatId }) => {
                     </table>
                 </div>
             );
-        } else if (segment.placeholder === '~SHAREHOLDING_TABLE~' && segment.type === 'table') {
+        } else if (segment.placeholder === '~SHAREHOLDING_TABLE~') {
             return (
                 <div key={index} className="shareholding-data-table">
                     <h3>Shareholding Table</h3>
@@ -242,7 +242,6 @@ export const ChatMessageScreen = ({ chatId }) => {
                     const overviewData = response?.company_overviews?.[0]?.overview?.overview_text || "no overview text available";
                     const textOverview = response?.enhanced_context_data?.classification?.display_components?.company_overview || false;
                     const compID = response?.company_ids?.[0]?.toString() || "";
-                    const table = response?.requires_sql_tables?.[0] || [];
                     console.log(llmResponse);
 
                     if(llmResponse === "Loading response...") {
