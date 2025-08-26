@@ -7,11 +7,11 @@ import {splitOverview} from "../../Utils/utilities";
 export const ChatMessageScreen = ({ chatId }) => {
     const { history } = useSelector(state => state?.chatReducer?.chatHistoryMap[chatId] || []);
 
-    const renderLLMResponse = (llmResponse, ratiosData, financialData, shareholdingData, overviewData, compID, dividendData, insiderData, rptData, pledgedData, corporateData) => {
+    const renderLLMResponse = (llmResponse, textOverview, ratiosData, financialData, shareholdingData, overviewData, compID, dividendData, insiderData, rptData, pledgedData, corporateData) => {
     const responseArray = Array.isArray(llmResponse) ? llmResponse : ["Server is currently unavailable"];
     return responseArray.map((segment, index) => {
         if (typeof segment === 'string') {
-            if (overviewData && index === 0) {
+            if (overviewData && index === 0 && textOverview) {
                 return (
                     <>
                         <div key={`overview-${index}`} className="company-overview">
@@ -24,7 +24,7 @@ export const ChatMessageScreen = ({ chatId }) => {
             } else {
                 return <ReactMarkdown key={index}>{segment}</ReactMarkdown>;
             }
-        } else if (segment.placeholder === '~COMPREHENSIVE_RATIOS_TABLE~' || segment.placeholder === '~RATIOS_TABLE~' && segment.type === 'table') {
+        } else if (segment.placeholder === '~COMPREHENSIVE_RATIOS_TABLE~' || segment.placeholder === '~RATIOS_TABLE~') {
             return (
                 <div key={index} className="company-stats-table">
                     <h3>Comprehensive Ratios Table</h3>
@@ -48,7 +48,7 @@ export const ChatMessageScreen = ({ chatId }) => {
                     </table>
                 </div>
             );
-        } else if (segment.placeholder === '~FINANCIAL_DATA_TABLE~' || segment.placeholder === '~FINANCIAL_PARAMETERS_TABLE~' && segment.type === 'table') {
+        } else if (segment.placeholder === '~FINANCIAL_DATA_TABLE~' || segment.placeholder === '~FINANCIAL_PARAMETERS_TABLE~') {
             return (
                 <div key={index} className="company-stats-table">
                     <h3>Financial Table</h3>
@@ -96,11 +96,11 @@ export const ChatMessageScreen = ({ chatId }) => {
                     </table>
                 </div>
             );
-        } else if (segment.placeholder === '~OVERVIEW_STATS_TABLE~' && segment.type === 'table') {
+        } else if (segment.placeholder === '~OVERVIEW_STATS_TABLE~') {
             return (
                 <Overview ID={compID} />
             );
-        } else if (segment.placeholder === '~dividend_TABLE~' && segment.type === 'table') {
+        } else if (segment.placeholder === '~dividend_TABLE~') {
             return (
                 <div key={index} className="dividend-data-table">
                     <h3>Dividend Table</h3>
@@ -124,7 +124,7 @@ export const ChatMessageScreen = ({ chatId }) => {
                     </table>
                 </div>
             );
-        } else if (segment.placeholder === '~RPT_TABLE~' && segment.type === 'table') {
+        } else if (segment.placeholder === '~RPT_TABLE~') {
             return (
                 <div key={index} className="rpt-data-table">
                     <h3>Rpt Table</h3>
@@ -148,7 +148,7 @@ export const ChatMessageScreen = ({ chatId }) => {
                     </table>
                 </div>
             );
-        } else if (segment.placeholder === '~PLEDGED_DATA_TABLE~' && segment.type === 'table') {
+        } else if (segment.placeholder === '~PLEDGED_DATA_TABLE~') {
             return (
                 <div key={index} className="pledged-data-table">
                     <h3>Pledged Data Table</h3>
@@ -172,7 +172,7 @@ export const ChatMessageScreen = ({ chatId }) => {
                     </table>
                 </div>
             );
-        } else if (segment.placeholder === '~CORPORATE_GOVERNANCE_TABLE~' && segment.type === 'table') {
+        } else if (segment.placeholder === '~CORPORATE_GOVERNANCE_TABLE~') {
             return (
                 <div key={index} className="corporate-data-table">
                     <h3>Corporate Governance Table</h3>
@@ -196,7 +196,7 @@ export const ChatMessageScreen = ({ chatId }) => {
                     </table>
                 </div>
             );
-        } else if (segment.placeholder === '~INSIDER_TRADING_TABLE~' && segment.type === 'table') {
+        } else if (segment.placeholder === '~INSIDER_TRADING_TABLE~') {
             return (
                 <div key={index} className="insider-data-table">
                     <h3>Insider Trading Table</h3>
@@ -240,7 +240,9 @@ export const ChatMessageScreen = ({ chatId }) => {
                     const pledgedData = response?.consolidated_data?.pledged_data?.[0] || {};
                     const corporateData = response?.consolidated_data?.corporate_governance?.[0] || {};
                     const overviewData = response?.company_overviews?.[0]?.overview?.overview_text || "no overview text available";
+                    const textOverview = response?.enhanced_context_data?.classification?.display_components?.company_overview || false;
                     const compID = response?.company_ids?.[0]?.toString() || "";
+                    const table = response?.requires_sql_tables?.[0] || [];
                     console.log(llmResponse);
 
                     if(llmResponse === "Loading response...") {
@@ -256,7 +258,7 @@ export const ChatMessageScreen = ({ chatId }) => {
                                 {query}
                             </div>
                             <div className="chat-response">
-                                {renderLLMResponse(llmResponse, ratiosData, financialsData, shareholdingData, overviewData, compID, dividendData, insiderData, rptData, pledgedData, corporateData)}
+                                {renderLLMResponse(llmResponse, textOverview, ratiosData, financialsData, shareholdingData, overviewData, compID, dividendData, insiderData, rptData, pledgedData, corporateData)}
                                 {Object.keys(graph).length > 0 && (
                                     <div className="chart-plot">
                                         <PlotlyGraph graphData={graph} />
