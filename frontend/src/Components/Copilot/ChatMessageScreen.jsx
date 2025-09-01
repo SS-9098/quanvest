@@ -232,8 +232,8 @@ export const ChatMessageScreen = ({ chatId }) => {
                     const graph = (response?.chart_data?.plotly_json && JSON.parse(response?.chart_data?.plotly_json)) || {};
                     const llmResponse = response?.llm_response || [];
                     const ratiosData = response?.consolidated_data?.ratios?.filtered?.[0] || {};
-                    const financialsData = response?.consolidated_data?.financial_statements?.balance?.[0] || {};
-                    const shareholdingData = response?.consolidated_data?.shareholding?.[0] || {};
+                    const financialsData = response?.consolidated_data?.financial_statements?.balance_sheet?.[0] || {};
+                    const shareholdingData = response?.consolidated_data?.shareholding_pattern?.[0] || {};
                     const dividendData = response?.consolidated_data?.dividend?.[0] || {};
                     const insiderData = response?.consolidated_data?.insider_trading?.[0] || {};
                     const rptData = response?.consolidated_data?.rpt?.[0] || {};
