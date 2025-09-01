@@ -100,7 +100,7 @@ export const ChatMessageScreen = ({ chatId }) => {
             return (
                 <Overview ID={compID} />
             );
-        } else if (segment.placeholder === '~dividend_TABLE~') {
+        } else if (segment.placeholder === '~DIVIDEND_TABLE~') {
             return (
                 <div key={index} className="dividend-data-table">
                     <h3>Dividend Table</h3>
